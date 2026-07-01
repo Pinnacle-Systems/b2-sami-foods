@@ -70,7 +70,7 @@ export const webhook = async (req, res) => {
 
 export const getAllOrdersAdmin = async (req, res) => {
   try {
-    const orders = await getAllOrdersAdminService();
+    const orders = await getAllOrdersAdminService(req.query);
     res.status(200).json({ success: true, orders });
   } catch (error) {
     console.error("Error fetching all orders admin:", error);

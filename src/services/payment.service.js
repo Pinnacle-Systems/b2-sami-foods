@@ -45,6 +45,7 @@ export const createOrderService = async ({ userId, items, addressId }) => {
     return {
       productId: item.productId,
       quantity: item.quantity,
+      weightQty: Math.round(totalQty),
       price: truePrice,
     };
   });
@@ -60,18 +61,43 @@ export const createOrderService = async ({ userId, items, addressId }) => {
 
   const razorpayOrder = await razorpay.orders.create(options);
 
-  // Save order in our database securely
-  const newOrder = await prisma.order.create({
-    data: {
-      userId,
-      totalAmount: finalAmount,
-      addressId: addressId ? Number(addressId) : null,
-      razorpayOrderId: razorpayOrder.id,
-      items: {
-        create: validatedItems,
-      },
-    },
-  });
+  // Save order in our database securely, with robust unique orderNo generation
+  let newOrder;
+  let attempts = 0;
+  while (attempts < 5) {
+    try {
+      // Option 3: Short Alphanumeric but highly numeric (e.g., #B2-84729103)
+      const randomInt = Math.floor(10000000 + Math.random() * 90000000);
+      const generatedOrderNo = `B2-${randomInt}`;
+
+      newOrder = await prisma.order.create({
+        data: {
+          userId,
+          orderNo: generatedOrderNo,
+          totalAmount: finalAmount,
+          addressId: addressId ? Number(addressId) : null,
+          razorpayOrderId: razorpayOrder.id,
+          items: {
+            create: validatedItems,
+          },
+        },
+      });
+      break; // Successfully inserted, break the loop
+    } catch (error) {
+      // P2002 is Prisma's error code for Unique constraint failed
+      if (error.code === "P2002" && error.meta?.target?.includes("orderNo")) {
+        attempts++;
+        if (attempts >= 5) {
+          throw new Error(
+            "Failed to generate a unique order  due to high traffic. Please try again.",
+          );
+        }
+        // If collision happened, we silently loop and retry with a new randomInt
+      } else {
+        throw error; // Throw any other unexpected database error
+      }
+    }
+  }
 
   return { order: newOrder, razorpayOrder };
 };
@@ -135,8 +161,33 @@ export const getOrdersService = async (userId) => {
   return orders;
 };
 
-export const getAllOrdersAdminService = async () => {
+export const getAllOrdersAdminService = async (filters = {}) => {
+  const { orderNo, customerName, email, mobile, status } = filters;
+
+  const where = {};
+
+  if (orderNo) {
+    where.id = Number(orderNo);
+  }
+  if (status) {
+    where.deliveryStatus = status;
+  }
+
+  if (customerName || email || mobile) {
+    where.user = {};
+    if (customerName) {
+      where.user.name = { contains: customerName, mode: "insensitive" };
+    }
+    if (email) {
+      where.user.email = { contains: email, mode: "insensitive" };
+    }
+    if (mobile) {
+      where.user.mobile = { contains: mobile };
+    }
+  }
+
   const orders = await prisma.order.findMany({
+    where,
     include: {
       user: { select: { name: true, email: true, mobile: true } },
     },
@@ -153,12 +204,15 @@ export const getOrderByIdAdminService = async (id) => {
       address: true,
       items: {
         include: {
-          product: { select: { productName: true, productImage: true } },
+          product: {
+            select: { productName: true, productImage: true, productUom: true },
+          },
         },
       },
     },
   });
-  if (!order) throw Object.assign(new Error("Order not found"), { status: 404 });
+  if (!order)
+    throw Object.assign(new Error("Order not found"), { status: 404 });
   return order;
 };
 

@@ -145,12 +145,13 @@ model Order {
   id               Int         @id @default(autoincrement())
   userId           Int
   user             User        @relation(fields: [userId], references: [id])
-
+  orderNo           String?     @unique
+  invNo             String?
   totalAmount      Float
-  status           String      @default("PENDING") // PENDING, PAID, FAILED
-   deliveryStatus    String      @default("Order Placed") // <-- ADD THIS LINE
-  addressId         Int?                                 // <-- ADD THIS LINE
-  address           Addresses?  @relation(fields: [addressId], references: [id]) // <-- ADD 
+  status           String      @default("PENDING")
+   deliveryStatus    String      @default("Order Placed") 
+  addressId         Int?                                
+  address           Addresses?  @relation(fields: [addressId], references: [id]) 
   razorpayOrderId  String?     @unique
   razorpayPaymentId String?    @unique
   razorpaySignature String?
@@ -166,6 +167,7 @@ model OrderItem {
   productId Int
   product   ProductMaster @relation(fields: [productId], references: [id])
   quantity  Int
+  weightQty Int?
   price     Float
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt

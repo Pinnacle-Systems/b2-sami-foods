@@ -4,7 +4,14 @@ import { useNavigate, Link } from "react-router-dom";
 import { selectIsAuthenticated } from "@/redux/features/authSlice";
 import { useAuthModal } from "@/components/auth-modal-provider";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, CheckCircle2, Clock, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Package,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Truck,
+} from "lucide-react";
 import { useGetOrdersQuery } from "@/redux/services/paymentApi";
 
 export default function OrdersPage() {
@@ -83,19 +90,27 @@ export default function OrdersPage() {
               >
                 <div className="flex flex-wrap justify-between items-center border-b border-border pb-4 mb-4 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">
-                      Order #{order.id} •{" "}
+                    <p className="text-sm ">
+                      Order Placed Date : {/* Order #{order.id} •{" "} */}
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1 font-mono">
+                    <p className="text-xs  mt-1 font-mono">
                       Txn: {order.razorpayPaymentId || order.razorpayOrderId}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full">
-                    {getStatusIcon(order.status)}
-                    <span className="text-sm font-semibold">
-                      {order.status}
-                    </span>
+                  <div className="flex gap-2">
+                    <div className="flex items-center gap-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 px-3 py-1.5 rounded-full">
+                      <Truck className="w-4 h-4" />
+                      <span className="text-sm font-semibold">
+                        {order.deliveryStatus || "Order Placed"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full">
+                      {getStatusIcon(order.status)}
+                      <span className="text-sm font-semibold">
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -138,13 +153,26 @@ export default function OrdersPage() {
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
                     <span>Subtotal</span>
                     <span>
-                      ₹{order.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}
+                      ₹
+                      {order.items
+                        .reduce(
+                          (sum, item) => sum + item.price * item.quantity,
+                          0,
+                        )
+                        .toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
                     <span>Delivery Charge</span>
                     <span>
-                      ₹{(order.totalAmount - order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)).toFixed(2)}
+                      ₹
+                      {(
+                        order.totalAmount -
+                        order.items.reduce(
+                          (sum, item) => sum + item.price * item.quantity,
+                          0,
+                        )
+                      ).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-border">

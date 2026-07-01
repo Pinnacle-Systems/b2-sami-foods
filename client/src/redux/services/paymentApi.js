@@ -21,14 +21,23 @@ const paymentApi = createApi({
       providesTags: ["Order"],
     }),
     getAllOrdersAdmin: builder.query({
-      query: () => ({
-        url: "/payment/admin/orders",
-        method: "GET",
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }),
+      query: (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.orderNo) params.append('orderNo', filters.orderNo);
+        if (filters.customerName) params.append('customerName', filters.customerName);
+        if (filters.email) params.append('email', filters.email);
+        if (filters.mobile) params.append('mobile', filters.mobile);
+        if (filters.status) params.append('status', filters.status);
+        
+        return {
+          url: `/payment/admin/orders?${params.toString()}`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        };
+      },
       providesTags: ["Order"],
     }),
     getOneOrderAdmin: builder.query({

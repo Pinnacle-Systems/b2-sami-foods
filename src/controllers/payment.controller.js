@@ -3,6 +3,7 @@ import {
   verifyPaymentService,
   getOrdersService,
   getAllOrdersAdminService,
+  getOrderByIdAdminService,
   updateDeliveryStatusService,
   webhookService
 } from '../services/payment.service.js';
@@ -69,10 +70,21 @@ export const webhook = async (req, res) => {
 
 export const getAllOrdersAdmin = async (req, res) => {
   try {
-    const orders = await getAllOrdersAdminService();
+    const orders = await getAllOrdersAdminService(req.query);
     res.status(200).json({ success: true, orders });
   } catch (error) {
     console.error("Error fetching all orders admin:", error);
+    res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  }
+};
+
+export const getOrderByIdAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await getOrderByIdAdminService(id);
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Error fetching single order admin:", error);
     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
   }
 };

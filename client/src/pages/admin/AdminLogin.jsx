@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, ShieldCheck, Sun, Moon } from "lucide-react"
 import { useLoginMutation } from "../../redux/services/authApi"
@@ -17,8 +17,13 @@ export default function AdminLogin() {
   const [error, setError] = useState("")
   const { isDark, toggle } = useAdminTheme()
 
+  useEffect(() => {
+    if (isAuthenticated && isAdmin) {
+      navigate("/admin/dashboard", { replace: true })
+    }
+  }, [isAuthenticated, isAdmin, navigate])
+
   if (isAuthenticated && isAdmin) {
-    navigate("/admin/dashboard", { replace: true })
     return null
   }
 

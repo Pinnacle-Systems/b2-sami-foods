@@ -6,6 +6,7 @@ import {
   View,
   StyleSheet,
   Font,
+  Image,
 } from "@react-pdf/renderer";
 
 Font.register({
@@ -38,10 +39,20 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   // Top Header
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  logo: {
+    width: 25,
+    height: 25,
+    marginRight: 6,
+  },
   companyName: {
     fontSize: 12,
     fontWeight: "bold",
-    textAlign: "center",
   },
   contactInfo: {
     fontSize: 6,
@@ -212,7 +223,10 @@ const InvoicePDF = ({ order }) => {
       <Page size={[226, 1200]} style={styles.page}>
         <View style={styles.container}>
           {/* Header (Company Info) */}
-          <Text style={styles.companyName}>B2 SAMI FOODS</Text>
+          <View style={styles.headerTitleContainer}>
+            <Image src="/navlogo.png" style={styles.logo} />
+            <Text style={styles.companyName}>B2 SAMI FOODS</Text>
+          </View>
           <Text style={styles.contactInfo}>
             56-B, Sakkarai palayam. Muthur -638105. Thirupur District.
             TamilNadu.
@@ -275,7 +289,7 @@ const InvoicePDF = ({ order }) => {
               <Text style={[styles.colItem, styles.thText]}>Item</Text>
               <Text style={[styles.colUOM, styles.thText]}>UOM</Text>
               <Text style={[styles.colWgtQty, styles.thText]}>Wgt Qty</Text>
-              <Text style={[styles.colProdQty, styles.thText]}>Prod Qty</Text>
+              <Text style={[styles.colProdQty, styles.thText]}>Nos</Text>
               <Text style={[styles.colPrice, styles.thText]}>Rate</Text>
               <Text style={[styles.colTotal, styles.thText]}>Amt</Text>
             </View>

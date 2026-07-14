@@ -288,7 +288,7 @@ const InvoicePDF = ({ order }) => {
               <Text style={[styles.colSNo, styles.thText]}>#</Text>
               <Text style={[styles.colItem, styles.thText]}>Item</Text>
               <Text style={[styles.colUOM, styles.thText]}>UOM</Text>
-              <Text style={[styles.colWgtQty, styles.thText]}>Wgt Qty</Text>
+              <Text style={[styles.colWgtQty, styles.thText]}>Qty</Text>
               <Text style={[styles.colProdQty, styles.thText]}>Nos</Text>
               <Text style={[styles.colPrice, styles.thText]}>Rate</Text>
               <Text style={[styles.colTotal, styles.thText]}>Amt</Text>

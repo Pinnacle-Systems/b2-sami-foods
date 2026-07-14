@@ -74,7 +74,9 @@ function OrderDetailsView({ orderId, onBack }) {
     }
   };
 
-  const subtotal = order.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
+  const subtotal =
+    order.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) ||
+    0;
   const deliveryCharge = order.totalAmount - subtotal;
 
   return (
@@ -99,7 +101,7 @@ function OrderDetailsView({ orderId, onBack }) {
           <div className="bg-card w-full max-w-5xl h-[90vh] rounded-xl shadow-xl flex flex-col border border-border overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-border bg-muted/30">
               <h3 className="font-semibold">Invoice Preview</h3>
-              <button 
+              <button
                 onClick={() => setShowPreview(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -334,7 +336,7 @@ export default function AdminOrdersPage() {
     customerName: "",
     email: "",
     mobile: "",
-    status: "",
+    status: "Order Placed",
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
@@ -378,14 +380,18 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Orders Tracking
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Manage customer orders and update delivery status
-          </p>
+      {/* ── Header ── */}
+      <div className="pcm-header">
+        <div className="pcm-header-left">
+          <div className="pcm-header-icon">
+            <Package size={20} />
+          </div>
+          <div>
+            <h2 className="pcm-title">Orders Tracking</h2>
+            <p className="pcm-subtitle">
+              Manage customer orders and update delivery status
+            </p>
+          </div>
         </div>
       </div>
 
@@ -492,13 +498,13 @@ export default function AdminOrdersPage() {
             <table className="pcm-table w-[80vw] rounded-lg bg-transparent overflow-x-auto table-fixed">
               <thead>
                 <tr>
-                  <th className="pcm-th pcm-th-num w-12">S.No</th>
-                  <th className="pcm-th pcm-th-num w-16">Order No</th>
-                  <th className="pcm-th w-40">Received Date & Time</th>
+                  <th className="pcm-th  w-6">S.No</th>
+                  <th className="pcm-th text-left  w-20">Order No</th>
+                  <th className="pcm-th w-32">Received Date & Time</th>
                   <th className="pcm-th w-32">Customer Name</th>
                   <th className="pcm-th w-40">Email</th>
                   <th className="pcm-th w-32">Contact No</th>
-                  <th className="pcm-th w-28 text-right">Amount Paid</th>
+                  <th className="pcm-th w-16 text-right">Amount Paid</th>
                   <th className="pcm-th w-28 text-left">Delivery Status</th>
                 </tr>
               </thead>
@@ -509,11 +515,11 @@ export default function AdminOrdersPage() {
                     onClick={() => setSelectedOrderId(order.id)}
                     className="pcm-tr cursor-pointer hover:bg-gray-50/50"
                   >
-                    <td className="py-2 text-xs text-gray-600 text-center border-r border-gray-300">
+                    <td className="py-2  text-xs text-gray-600 text-center border-r border-gray-300">
                       {idx + 1}
                     </td>
-                    <td className="pcm-td pcm-td-num border-r border-gray-300">
-                      #{order.id}
+                    <td className="pcm-td  font-bold pcm-td-num border-r border-gray-300">
+                      #{order.orderNo}
                     </td>
                     <td className="pcm-td pcm-td-name border-r border-gray-300">
                       {new Date(order.createdAt).toLocaleString()}

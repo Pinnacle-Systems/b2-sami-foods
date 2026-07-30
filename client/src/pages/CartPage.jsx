@@ -84,6 +84,9 @@ export default function CartPage() {
         return;
       }
 
+      // Sync frontend cart since backend cleared it
+      await syncFromBackend(localStorage.getItem("token"));
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderData.razorpayOrder.amount,
@@ -121,6 +124,10 @@ export default function CartPage() {
       };
 
       const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response) {
+        alert("Payment Failed or Cancelled. You can retry from your Orders page.");
+        navigate("/orders");
+      });
       paymentObject.open();
     } catch (err) {
       console.error(err);

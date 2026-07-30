@@ -12,6 +12,8 @@ import {
   User,
   ArrowLeft,
   Printer,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   useGetAllOrdersAdminQuery,
@@ -21,6 +23,8 @@ import {
 import { X } from "lucide-react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import InvoicePDF from "@/components/InvoicePDF";
+
+const PAGE_SIZE = 10;
 
 const DELIVERY_STATUSES = [
   "Order Placed",
@@ -37,6 +41,21 @@ const getPaymentStatusColor = (status) => {
       return "text-red-600 bg-red-100";
     default:
       return "text-orange-600 bg-orange-100";
+  }
+};
+
+const getDeliveryStatusColor = (status) => {
+  switch (status) {
+    case "Order Placed":
+      return "text-blue-700 bg-blue-100 border-blue-200";
+    case "Processing":
+      return "text-orange-700 bg-orange-100 border-orange-200";
+    case "Shipped":
+      return "text-purple-700 bg-purple-100 border-purple-200";
+    case "Delivered":
+      return "text-green-700 bg-green-100 border-green-200";
+    default:
+      return "text-gray-700 bg-gray-100 border-gray-200";
   }
 };
 
@@ -67,6 +86,10 @@ function OrderDetailsView({ orderId, onBack }) {
   }
 
   const handleStatusChange = async (id, newStatus) => {
+    if (order.status !== "PAID") {
+      const confirmed = window.confirm("Warning: Payment is not still paid. Proceed to update tracking?");
+      if (!confirmed) return;
+    }
     try {
       await updateStatus({ id, deliveryStatus: newStatus }).unwrap();
     } catch (err) {
@@ -89,7 +112,13 @@ function OrderDetailsView({ orderId, onBack }) {
           <ArrowLeft className="w-4 h-4" /> Back to Orders
         </button>
         <button
-          onClick={() => setShowPreview(true)}
+          onClick={() => {
+            if (order.status !== "PAID") {
+              const confirmed = window.confirm("Warning: Payment is not still paid. Proceed to print?");
+              if (!confirmed) return;
+            }
+            setShowPreview(true);
+          }}
           className="flex items-center gap-2 text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90"
         >
           <Printer className="w-4 h-4" /> Print / Preview Invoice
@@ -260,7 +289,7 @@ function OrderDetailsView({ orderId, onBack }) {
             </h4>
             <div className="relative">
               <select
-                className="w-full appearance-none bg-card border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-transparent outline-none cursor-pointer"
+                className={`w-full appearance-none border rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-transparent outline-none cursor-pointer ${getDeliveryStatusColor(order.deliveryStatus)}`}
                 value={order.deliveryStatus}
                 onChange={(e) => handleStatusChange(order.id, e.target.value)}
                 disabled={isUpdating}
@@ -339,6 +368,11 @@ export default function AdminOrdersPage() {
     status: "Order Placed",
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -352,6 +386,8 @@ export default function AdminOrdersPage() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   const filteredOrders = data?.orders || [];
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -486,7 +522,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
         ) : (
-          <div className="pcm-table-wrap relative min-h-[200px]">
+          <div className="pcm-table-wrap relative min-h-50">
             {isFetching && (
               <div className="absolute inset-0 bg-background/50 flex flex-col items-center justify-center z-10 backdrop-blur-[1px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
@@ -509,14 +545,14 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders?.map((order, idx) => (
+                {pagedOrders?.map((order, idx) => (
                   <tr
                     key={order.id}
                     onClick={() => setSelectedOrderId(order.id)}
                     className="pcm-tr cursor-pointer hover:bg-gray-50/50"
                   >
                     <td className="py-2  text-xs text-gray-600 text-center border-r border-gray-300">
-                      {idx + 1}
+                      {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
                     <td className="pcm-td  font-bold pcm-td-num border-r border-gray-300">
                       #{order.orderNo}
@@ -543,7 +579,7 @@ export default function AdminOrdersPage() {
                       ₹{order.totalAmount.toFixed(2)}
                     </td>
                     <td className="pcm-td border-r border-gray-300 text-left pl-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getDeliveryStatusColor(order.deliveryStatus)}`}>
                         {order.deliveryStatus}
                       </span>
                     </td>
@@ -551,6 +587,35 @@ export default function AdminOrdersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* ── Pagination ── */}
+        {filteredOrders.length > 0 && totalPages > 1 && (
+          <div className="pcm-pagination mt-6">
+            <button
+              className="pcm-page-btn"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                className={`pcm-page-btn ${p === page ? "pcm-page-active" : ""}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              className="pcm-page-btn"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              <ChevronRight size={15} />
+            </button>
           </div>
         )}
       </div>

@@ -99,6 +99,17 @@ export const createOrderService = async ({ userId, items, addressId }) => {
     }
   }
 
+  // Clear the user's cart immediately after order creation
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+  });
+
+  if (cart) {
+    await prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
+    });
+  }
+
   return { order: newOrder, razorpayOrder };
 };
 
@@ -167,7 +178,8 @@ export const getAllOrdersAdminService = async (filters = {}) => {
   const where = {};
 
   if (orderNo) {
-    where.id = Number(orderNo);
+    const cleanOrderNo = orderNo.replace(/^#/, "");
+    where.orderNo = { contains: cleanOrderNo, mode: "insensitive" };
   }
   if (status) {
     where.deliveryStatus = status;

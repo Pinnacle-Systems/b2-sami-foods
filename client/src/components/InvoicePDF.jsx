@@ -31,19 +31,32 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    borderWidth: 1,
+    borderColor: "#000",
+    borderStyle: "solid",
+    padding: 5,
   },
-  dashedDivider: {
+  divider: {
     borderBottomWidth: 1,
     borderBottomColor: "#000",
-    borderBottomStyle: "dashed",
+    borderBottomStyle: "solid",
     marginVertical: 4,
+    marginLeft: -5,
+    marginRight: -5,
   },
   // Top Header
   headerTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerRight: {
+    alignItems: "flex-start",
   },
   logo: {
     width: 25,
@@ -51,130 +64,53 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   companyName: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
-  contactInfo: {
-    fontSize: 6,
-    textAlign: "center",
-    marginBottom: 1,
+  headerRightText: {
+    fontSize: 8,
+    fontWeight: "bold",
   },
   invoiceTitle: {
     fontSize: 8,
     fontWeight: "bold",
     textAlign: "center",
     textDecoration: "underline",
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  // Customer Info
-  customerInfoContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 2,
-  },
-  customerLeft: {
-    flex: 1,
-    alignItems: "flex-start",
-  },
-  customerRight: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  customerText: {
-    fontSize: 6,
-  },
-  // Table
-  table: {
-    width: "100%",
-  },
-  tableHeader: {
-    flexDirection: "row",
-    borderTopWidth: 1,
-    borderTopColor: "#000",
-    borderTopStyle: "dashed",
-    borderBottomWidth: 1,
-    borderBottomColor: "#000",
-    borderBottomStyle: "dashed",
-    paddingVertical: 3,
-  },
-  tableRow: {
-    flexDirection: "row",
-    paddingVertical: 2,
-  },
-  // Column Widths
-  colSNo: { width: "6%", textAlign: "center" },
-  colItem: { width: "30%", textAlign: "left" },
-  colUOM: { width: "10%", textAlign: "left" },
-  colWgtQty: { width: "13%", textAlign: "right", paddingRight: 4 },
-  colProdQty: { width: "13%", textAlign: "right", paddingRight: 4 },
-  colPrice: { width: "13%", textAlign: "right", paddingRight: 4 },
-  colTotal: { width: "15%", textAlign: "right" },
-
-  thText: {
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  itemText: {
-    fontSize: 5.5,
-  },
-
-  // Totals
-  totalsBlock: {
-    marginTop: 2,
-  },
-  totalsRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginBottom: 1,
-  },
-  totalsLabelContainer: {
-    width: "35%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingRight: 10,
-  },
-  totalsText: {
-    fontSize: 6,
-  },
-  totalsValue: {
-    fontSize: 6,
-    textAlign: "right",
-    width: "25%",
-  },
-  totalPayableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 3,
-    borderTopWidth: 1,
-    borderTopColor: "#000",
-    borderTopStyle: "dashed",
-    borderBottomWidth: 1,
-    borderBottomColor: "#000",
-    borderBottomStyle: "dashed",
     marginTop: 2,
     marginBottom: 4,
   },
-  totalPayableLabel: {
-    fontSize: 9,
-    fontWeight: "bold",
+  // Customer & Company Info
+  addressContainer: {
+    marginBottom: 4,
   },
-  totalPayableAmount: {
-    fontSize: 9,
-    fontWeight: "bold",
-    textAlign: "right",
+  addressBlock: {
+    marginBottom: 6,
   },
-
-  // Footer
-  paymentBreakdownLabel: {
-    fontSize: 6,
+  addressTitle: {
+    fontSize: 10,
+    fontWeight: "bold",
     textDecoration: "underline",
     marginBottom: 2,
   },
+  addressText: {
+    fontSize: 10,
+    marginBottom: 1,
+  },
+
+
+  // Totals
+  totalsText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 10,
+  },
   termsText: {
     textAlign: "center",
-    fontSize: 6,
-    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "bold",
+    marginTop: 10,
   },
   watermarkContainer: {
     justifyContent: "center",
@@ -191,23 +127,9 @@ const styles = StyleSheet.create({
   },
 });
 
-const formatCurrency = (amount) => {
-  return Number(amount).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
 const InvoicePDF = ({ order }) => {
   if (!order) return null;
-
-  const subtotal =
-    order.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) ||
-    0;
-  const deliveryCharge = order.totalAmount - subtotal;
-
-  const totalQtySum =
-    order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  console.log(order, "order");
 
   const orderDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -217,167 +139,134 @@ const InvoicePDF = ({ order }) => {
 
   const customerName = order.user?.name || "WALK-IN CUSTOMER";
   const customerMobile = order.address?.mobile || order.user?.mobile || "";
+  const alternativeMobile = order.address?.alterNateMobile || "";
+  const addressType = order.address?.addressType || "";
+  const landmark = order.address?.landmark || "";
+  const totalItemsCount = order.items?.length || 0;
+  const totalQtySum =
+    order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
 
   return (
     <Document>
-      <Page size={[226, 1200]} style={styles.page}>
+      <Page size={[297.64, 425.2]} style={styles.page}>
         <View style={styles.container}>
-          {/* Header (Company Info) */}
+          {/* Header */}
           <View style={styles.headerTitleContainer}>
-            <Image src="/navlogo.png" style={styles.logo} />
-            <Text style={styles.companyName}>B2 SAMI FOODS</Text>
-          </View>
-          <Text style={styles.contactInfo}>
-            56-B, Sakkarai palayam. Muthur -638105. Thirupur District.
-            TamilNadu.
-          </Text>
-          <Text style={styles.contactInfo}>Ph No.: 9003543646</Text>
-
-          <Text style={styles.invoiceTitle}>INVOICE</Text>
-
-          {/* Ship To Section */}
-          <View style={{ marginTop: 2, marginBottom: 4 }}>
-            <Text
-              style={[
-                styles.customerText,
-                {
-                  fontWeight: "bold",
-                  textDecoration: "underline",
-                  marginBottom: 2,
-                },
-              ]}
-            >
-              Ship To:
-            </Text>
-            {/* Customer & Order Info */}
-            <View style={styles.customerInfoContainer}>
-              <View style={styles.customerLeft}>
-                <Text
-                  style={[styles.customerText, { textTransform: "uppercase" }]}
-                >
-                  {customerName}
-                </Text>
-                {customerMobile && (
-                  <Text style={styles.customerText}>{customerMobile}</Text>
-                )}
+            <View style={styles.headerLeft}>
+              <Image src="/navlogo.png" style={styles.logo} />
+              <Text style={styles.companyName}>B2 SAMI FOODS</Text>
+            </View>
+            <View style={styles.headerRight}>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={[styles.headerRightText, { width: 40 }]}>Order No</Text>
+                <Text style={styles.headerRightText}>: # {order.orderNo || ""}</Text>
               </View>
-              <View style={styles.customerRight}>
-                <Text style={styles.customerText}># {order.orderNo || ""}</Text>
-                <Text style={styles.customerText}>Date : {orderDate}</Text>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={[styles.headerRightText, { width: 40 }]}>Date</Text>
+                <Text style={styles.headerRightText}>: {orderDate}</Text>
               </View>
             </View>
-            {order.address ? (
-              <View>
-                <Text style={styles.customerText}>
-                  {order.address.address}, {order.address.city},
-                </Text>
-                <Text style={styles.customerText}>
-                  {order.address.state} - {order.address.pinCode}
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.customerText}>
-                Walk-in / No Shipping Address
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* <Text style={styles.invoiceTitle}>INVOICE</Text> */}
+
+          {/* Address Section (One Column) */}
+          <View style={styles.addressContainer}>
+            {/* From Address */}
+            <View style={styles.addressBlock}>
+              <Text style={styles.addressTitle}>From:</Text>
+              <Text style={[styles.addressText, { fontWeight: "bold" }]}>
+                B2 SAMI FOODS
               </Text>
-            )}
-          </View>
-
-          {/* Table */}
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.colSNo, styles.thText]}>#</Text>
-              <Text style={[styles.colItem, styles.thText]}>Item</Text>
-              <Text style={[styles.colUOM, styles.thText]}>UOM</Text>
-              <Text style={[styles.colWgtQty, styles.thText]}>Qty</Text>
-              <Text style={[styles.colProdQty, styles.thText]}>Nos</Text>
-              <Text style={[styles.colPrice, styles.thText]}>Rate</Text>
-              <Text style={[styles.colTotal, styles.thText]}>Amt</Text>
+              <Text style={styles.addressText}>
+                56-B, Sakkarai palayam, Muthur - 638105,
+              </Text>
+              <Text style={styles.addressText}>
+                Thirupur District, TamilNadu.
+              </Text>
+              <Text style={styles.addressText}>Ph No : 9003543646</Text>
             </View>
+            <View style={styles.divider} />
 
-            {order.items?.map((item, index) => (
-              <View style={styles.tableRow} key={item.id}>
-                <Text style={[styles.colSNo, styles.itemText]}>
-                  {index + 1}
+            {/* To Address */}
+            <View style={styles.addressBlock}>
+              <Text style={styles.addressTitle}>To:</Text>
+              <Text
+                style={[
+                  styles.addressText,
+                  { textTransform: "uppercase", fontWeight: "bold" },
+                ]}
+              >
+                {customerName}
+              </Text>
+              {addressType && (
+                <Text style={styles.addressText}>
+                  Address Type : {addressType}
                 </Text>
-                <Text style={[styles.colItem, styles.itemText]}>
-                  {item.product.productName}
+              )}
+              {order.address ? (
+                <View>
+                  <Text style={styles.addressText}>
+                    {order.address.address},
+                  </Text>
+                  <Text style={styles.addressText}>{order.address.city},</Text>
+                  <Text style={styles.addressText}>
+                    {order.address.state} - {order.address.pinCode}
+                  </Text>
+                  {landmark && (
+                    <Text style={styles.addressText}>
+                      Landmark: {order.address.landmark || "-"}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <Text style={styles.addressText}>
+                  Walk-in / No Shipping Address
                 </Text>
-                <Text style={[styles.colUOM, styles.itemText]}>
-                  {item.product.productUom?.shortCode || "-"}
+              )}
+              {customerMobile && (
+                <Text style={styles.addressText}>
+                  Mobile : {customerMobile}
                 </Text>
-                <Text style={[styles.colWgtQty, styles.itemText]}>
-                  {Number(item.weightQty).toFixed(2)}
+              )}
+
+              {alternativeMobile && (
+                <Text style={styles.addressText}>
+                  Alternate Mobile : {alternativeMobile}
                 </Text>
-                <Text style={[styles.colProdQty, styles.itemText]}>
-                  {item.quantity}
-                </Text>
-                <Text style={[styles.colPrice, styles.itemText]}>
-                  {formatCurrency(item.price)}
-                </Text>
-                <Text style={[styles.colTotal, styles.itemText]}>
-                  {formatCurrency(item.price * item.quantity)}
-                </Text>
-              </View>
-            ))}
+              )}
+            </View>
+            <View style={styles.divider} />
           </View>
 
-          <View style={styles.dashedDivider} />
+
 
           {/* Totals Block */}
           <View style={{ position: "relative" }}>
-            <View style={styles.totalsBlock}>
-              <View style={styles.totalsRow}>
-                <View style={styles.totalsLabelContainer}>
-                  <Text style={styles.totalsText}>Total Items</Text>
-                  <Text style={styles.totalsText}>:</Text>
-                </View>
-                <Text style={styles.totalsValue}>
-                  {order.items?.length || 0} (Qty: {totalQtySum})
-                </Text>
-              </View>
-              <View style={styles.totalsRow}>
-                <View style={styles.totalsLabelContainer}>
-                  <Text style={styles.totalsText}>Subtotal</Text>
-                  <Text style={styles.totalsText}>:</Text>
-                </View>
-                <Text style={styles.totalsValue}>
-                  {formatCurrency(subtotal)}
-                </Text>
-              </View>
-              <View style={styles.totalsRow}>
-                <View style={styles.totalsLabelContainer}>
-                  <Text style={styles.totalsText}>Delivery Charge</Text>
-                  <Text style={styles.totalsText}>:</Text>
-                </View>
-                <Text style={styles.totalsValue}>
-                  {formatCurrency(deliveryCharge)}
-                </Text>
-              </View>
+            <Text style={styles.totalsText}>
+              Total {totalItemsCount} {totalItemsCount === 1 ? "Item" : "Items"}{" "}
+              (Qty: {totalQtySum})
+            </Text>
 
-              <View style={styles.totalPayableRow}>
-                <Text style={styles.totalPayableLabel}>Total Amount Paid</Text>
-                <Text style={styles.totalPayableAmount}>
-                  Rs.{formatCurrency(order.totalAmount)}
-                </Text>
+            {/* {order.status && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: -25,
+                  left: 0,
+                  right: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: -1,
+                }}
+              >
+                <Text style={styles.watermarkText}>{order.status}</Text>
               </View>
-            </View>
-            <View
-              style={{
-                position: "absolute",
-                top: 15,
-                left: 0,
-                right: 0,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={styles.watermarkText}>{order.status}</Text>
-            </View>
+            )} */}
           </View>
 
-          {/* <View style={styles.dashedDivider} /> */}
-
-          {/* T&Cs */}
           <Text style={styles.termsText}>THANK YOU!</Text>
         </View>
       </Page>

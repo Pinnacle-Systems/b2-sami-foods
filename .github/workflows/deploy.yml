@@ -24,6 +24,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build frontend
+        env:
+          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
         run: pnpm --filter @b2-samifoods/web run build
 
       - name: Deploy application source to VPS

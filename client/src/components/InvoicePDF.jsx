@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
 
-
   // Totals
   totalsText: {
     fontSize: 10,
@@ -153,16 +152,22 @@ const InvoicePDF = ({ order }) => {
           {/* Header */}
           <View style={styles.headerTitleContainer}>
             <View style={styles.headerLeft}>
-              <Image src="/navlogo.png" style={styles.logo} />
+              <Image src="/b2samifinallogo.jpeg" style={styles.logo} />
               <Text style={styles.companyName}>B2 SAMI FOODS</Text>
             </View>
             <View style={styles.headerRight}>
               <View style={{ flexDirection: "row" }}>
-                <Text style={[styles.headerRightText, { width: 40 }]}>Order No</Text>
-                <Text style={styles.headerRightText}>: # {order.orderNo || ""}</Text>
+                <Text style={[styles.headerRightText, { width: 40 }]}>
+                  Order No
+                </Text>
+                <Text style={styles.headerRightText}>
+                  : # {order.orderNo || ""}
+                </Text>
               </View>
               <View style={{ flexDirection: "row" }}>
-                <Text style={[styles.headerRightText, { width: 40 }]}>Date</Text>
+                <Text style={[styles.headerRightText, { width: 40 }]}>
+                  Date
+                </Text>
                 <Text style={styles.headerRightText}>: {orderDate}</Text>
               </View>
             </View>
@@ -240,8 +245,6 @@ const InvoicePDF = ({ order }) => {
             </View>
             <View style={styles.divider} />
           </View>
-
-
 
           {/* Totals Block */}
           <View style={{ position: "relative" }}>

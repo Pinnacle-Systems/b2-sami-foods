@@ -947,7 +947,7 @@
   letter-spacing: 0.03em;
   background: var(--muted);
   border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+  white-space: normal;
   line-height: 1.3;
 }
 .pcm-th-num    { width: 48px; text-align: center; }

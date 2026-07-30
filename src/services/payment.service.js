@@ -162,7 +162,7 @@ export const getOrdersService = async (userId) => {
 };
 
 export const getAllOrdersAdminService = async (filters = {}) => {
-  const { orderNo, customerName, email, mobile, status, page = 1, limit = 10 } = filters;
+  const { orderNo, customerName, email, mobile, status, paymentStatus, page = 1, limit = 10 } = filters;
 
   const where = {};
 
@@ -172,6 +172,9 @@ export const getAllOrdersAdminService = async (filters = {}) => {
   }
   if (status) {
     where.deliveryStatus = status;
+  }
+  if (paymentStatus) {
+    where.status = paymentStatus;
   }
 
   if (customerName || email || mobile) {

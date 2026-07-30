@@ -12,20 +12,22 @@ import {
   XCircle,
   Truck,
 } from "lucide-react";
-import { useGetOrdersQuery } from "@/redux/services/paymentApi";
+import { useGetOrdersQuery, useVerifyPaymentMutation } from "@/redux/services/paymentApi";
+import { useGetMeQuery } from "@/redux/services/authApi";
 
 export default function OrdersPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { openLogin } = useAuthModal();
   const navigate = useNavigate();
 
-  const { data, isLoading } = useGetOrdersQuery(undefined, {
+  const { data, isLoading, refetch } = useGetOrdersQuery(undefined, {
     skip: !isAuthenticated,
   });
 
-  const orders = data?.orders || [];
+  const [verifyPayment, { isLoading: isVerifying }] = useVerifyPaymentMutation();
+  const { data: user } = useGetMeQuery(undefined, { skip: !isAuthenticated });
 
-  console.log(orders, "orders");
+  const orders = data?.orders || [];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,6 +35,65 @@ export default function OrdersPage() {
       openLogin();
     }
   }, [isAuthenticated, navigate, openLogin]);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRetryPayment = async (order) => {
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    try {
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        name: "Sami Foods",
+        description: "Retry Order Payment",
+        order_id: order.razorpayOrderId,
+        handler: async function (response) {
+          try {
+            const verifyData = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }).unwrap();
+
+            if (verifyData.success || verifyData === true) {
+              alert("Payment Successful!");
+              refetch();
+            } else {
+              alert("Payment Verification Failed");
+            }
+          } catch (err) {
+            alert("Payment Verification Failed");
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: user?.mobile,
+        },
+        theme: {
+          color: "#0f172a",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -113,6 +174,18 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </div>
+                
+                {order.status !== "PAID" && (
+                  <div className="mb-4 flex justify-end">
+                    <Button 
+                      onClick={() => handleRetryPayment(order)}
+                      disabled={isVerifying}
+                      className="w-full sm:w-auto"
+                    >
+                      Retry Payment
+                    </Button>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   {order.items.map((item) => (

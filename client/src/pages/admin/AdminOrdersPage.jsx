@@ -12,6 +12,8 @@ import {
   User,
   ArrowLeft,
   Printer,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   useGetAllOrdersAdminQuery,
@@ -21,6 +23,8 @@ import {
 import { X } from "lucide-react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import InvoicePDF from "@/components/InvoicePDF";
+
+const PAGE_SIZE = 10;
 
 const DELIVERY_STATUSES = [
   "Order Placed",
@@ -37,6 +41,21 @@ const getPaymentStatusColor = (status) => {
       return "text-red-600 bg-red-100";
     default:
       return "text-orange-600 bg-orange-100";
+  }
+};
+
+const getDeliveryStatusColor = (status) => {
+  switch (status) {
+    case "Order Placed":
+      return "text-blue-700 bg-blue-100 border-blue-200";
+    case "Processing":
+      return "text-orange-700 bg-orange-100 border-orange-200";
+    case "Shipped":
+      return "text-purple-700 bg-purple-100 border-purple-200";
+    case "Delivered":
+      return "text-green-700 bg-green-100 border-green-200";
+    default:
+      return "text-gray-700 bg-gray-100 border-gray-200";
   }
 };
 
@@ -67,6 +86,12 @@ function OrderDetailsView({ orderId, onBack }) {
   }
 
   const handleStatusChange = async (id, newStatus) => {
+    if (order.status !== "PAID") {
+      const confirmed = window.confirm(
+        "Warning: Payment is not still paid. Proceed to update tracking?",
+      );
+      if (!confirmed) return;
+    }
     try {
       await updateStatus({ id, deliveryStatus: newStatus }).unwrap();
     } catch (err) {
@@ -81,7 +106,7 @@ function OrderDetailsView({ orderId, onBack }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -89,7 +114,15 @@ function OrderDetailsView({ orderId, onBack }) {
           <ArrowLeft className="w-4 h-4" /> Back to Orders
         </button>
         <button
-          onClick={() => setShowPreview(true)}
+          onClick={() => {
+            if (order.status !== "PAID") {
+              const confirmed = window.confirm(
+                "Warning: Payment is not still paid. Proceed to print?",
+              );
+              if (!confirmed) return;
+            }
+            setShowPreview(true);
+          }}
           className="flex items-center gap-2 text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90"
         >
           <Printer className="w-4 h-4" /> Print / Preview Invoice
@@ -100,18 +133,36 @@ function OrderDetailsView({ orderId, onBack }) {
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card w-full max-w-5xl h-[90vh] rounded-xl shadow-xl flex flex-col border border-border overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-border bg-muted/30">
-              <h3 className="font-semibold">Invoice Preview</h3>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <h3 className="font-semibold">Invoice</h3>
+              <div className="flex items-center gap-3">
+                <PDFDownloadLink
+                  document={<InvoicePDF order={order} />}
+                  fileName={`Invoice_${order.orderNo || order.id}.pdf`}
+                  className="text-xs sm:text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 font-medium whitespace-nowrap"
+                >
+                  {({ loading }) => (loading ? 'Loading...' : 'Download PDF')}
+                </PDFDownloadLink>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 w-full bg-muted/10">
-              <PDFViewer width="100%" height="100%" className="border-none">
-                <InvoicePDF order={order} />
-              </PDFViewer>
+            <div className="flex-1 w-full bg-muted/10 relative">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center md:hidden">
+                <Printer className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                <h4 className="font-semibold text-lg mb-2">Ready to Download</h4>
+                <p className="text-muted-foreground text-sm">
+                  PDF preview is not supported on this device. Please use the Download button above to view your invoice.
+                </p>
+              </div>
+              <div className="hidden md:block w-full h-full">
+                <PDFViewer width="100%" height="100%" className="border-none">
+                  <InvoicePDF order={order} />
+                </PDFViewer>
+              </div>
             </div>
           </div>
         </div>
@@ -119,8 +170,8 @@ function OrderDetailsView({ orderId, onBack }) {
 
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row">
         {/* Order Info & Items */}
-        <div className="p-6 flex-1 border-b md:border-b-0 md:border-r border-border">
-          <div className="flex justify-between items-start mb-4">
+        <div className="p-4 sm:p-6 flex-1 border-b md:border-b-0 md:border-r border-border">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
             <div>
               <h3 className="font-bold text-lg">Order #{order.id}</h3>
               <p className="text-sm text-muted-foreground">
@@ -139,7 +190,7 @@ function OrderDetailsView({ orderId, onBack }) {
                 )}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-border">
               <p className="text-sm text-muted-foreground">Total Amount</p>
               <p className="font-bold text-xl text-primary">
                 ₹{order.totalAmount.toFixed(2)}
@@ -188,7 +239,7 @@ function OrderDetailsView({ orderId, onBack }) {
             ))}
           </div>
 
-          <div className="mt-4 space-y-2 max-w-sm ml-auto text-sm pr-2">
+          <div className="mt-4 space-y-2 w-full sm:max-w-sm sm:ml-auto text-sm">
             <div className="flex justify-between items-center text-muted-foreground">
               <span>Subtotal</span>
               <span className="font-medium text-foreground">
@@ -215,7 +266,7 @@ function OrderDetailsView({ orderId, onBack }) {
         </div>
 
         {/* Customer & Tracking */}
-        <div className="p-6 w-full md:w-80 shrink-0 bg-muted/10 flex flex-col justify-between">
+        <div className="p-4 sm:p-6 w-full md:w-80 shrink-0 bg-muted/10 flex flex-col justify-between">
           <div>
             <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
               Customer Details
@@ -260,7 +311,7 @@ function OrderDetailsView({ orderId, onBack }) {
             </h4>
             <div className="relative">
               <select
-                className="w-full appearance-none bg-card border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-transparent outline-none cursor-pointer"
+                className={`w-full appearance-none border rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary focus:border-transparent outline-none cursor-pointer ${getDeliveryStatusColor(order.deliveryStatus)}`}
                 value={order.deliveryStatus}
                 onChange={(e) => handleStatusChange(order.id, e.target.value)}
                 disabled={isUpdating}
@@ -337,8 +388,14 @@ export default function AdminOrdersPage() {
     email: "",
     mobile: "",
     status: "Order Placed",
+    paymentStatus: "",
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -347,11 +404,15 @@ export default function AdminOrdersPage() {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  const { data, isLoading, isFetching } =
-    useGetAllOrdersAdminQuery(debouncedFilters);
+  const { data, isLoading, isFetching } = useGetAllOrdersAdminQuery({
+    ...debouncedFilters,
+    page,
+    limit: PAGE_SIZE,
+  });
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
-  const filteredOrders = data?.orders || [];
+  const pagedOrders = data?.orders || [];
+  const totalPages = data?.totalPages || 1;
 
   if (isLoading) {
     return (
@@ -398,7 +459,7 @@ export default function AdminOrdersPage() {
       {/* ── Filter Bar ── */}
       <div className="pcm-search-row flex-wrap gap-3 overflow-x-auto">
         <div className="flex items-center gap-2">
-          <div className="pcm-search-wrap w-24 px-2">
+          <div className="pcm-search-wrap w-40 px-2">
             <input
               className="pcm-search-input"
               placeholder="Order No"
@@ -450,11 +511,24 @@ export default function AdminOrdersPage() {
               </option>
             ))}
           </select>
+          <select
+            className="pm-cat-filter w-36"
+            value={filters.paymentStatus}
+            onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
+          >
+            <option value="">All Payments</option>
+            {["PAID", "PENDING", "CANCELLED"].map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
           {(filters.orderNo ||
             filters.customerName ||
             filters.email ||
             filters.mobile ||
-            filters.status) && (
+            filters.status ||
+            filters.paymentStatus) && (
             <button
               className="text-muted-foreground hover:text-destructive text-sm flex items-center px-2 py-1.5"
               onClick={() =>
@@ -464,6 +538,7 @@ export default function AdminOrdersPage() {
                   email: "",
                   mobile: "",
                   status: "",
+                  paymentStatus: "",
                 })
               }
             >
@@ -472,12 +547,13 @@ export default function AdminOrdersPage() {
           )}
         </div>
         <span className="pcm-count ml-auto">
-          {filteredOrders.length} record{filteredOrders.length !== 1 ? "s" : ""}
+          {data?.totalCount || 0} record
+          {(data?.totalCount || 0) !== 1 ? "s" : ""}
         </span>
       </div>
 
       <div>
-        {filteredOrders.length === 0 && !isFetching ? (
+        {pagedOrders.length === 0 && !isFetching ? (
           <div className="text-center py-12 bg-card border border-border rounded-xl shadow-sm">
             <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium">No orders found</h3>
@@ -486,7 +562,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
         ) : (
-          <div className="pcm-table-wrap relative min-h-[200px]">
+          <div className="pcm-table-wrap relative min-h-50">
             {isFetching && (
               <div className="absolute inset-0 bg-background/50 flex flex-col items-center justify-center z-10 backdrop-blur-[1px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
@@ -495,62 +571,95 @@ export default function AdminOrdersPage() {
                 </span>
               </div>
             )}
-            <table className="pcm-table w-[80vw] rounded-lg bg-transparent overflow-x-auto table-fixed">
-              <thead>
-                <tr>
-                  <th className="pcm-th  w-6">S.No</th>
-                  <th className="pcm-th text-left  w-20">Order No</th>
-                  <th className="pcm-th w-32">Received Date & Time</th>
-                  <th className="pcm-th w-32">Customer Name</th>
-                  <th className="pcm-th w-40">Email</th>
-                  <th className="pcm-th w-32">Contact No</th>
-                  <th className="pcm-th w-16 text-right">Amount Paid</th>
-                  <th className="pcm-th w-28 text-left">Delivery Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders?.map((order, idx) => (
-                  <tr
-                    key={order.id}
-                    onClick={() => setSelectedOrderId(order.id)}
-                    className="pcm-tr cursor-pointer hover:bg-gray-50/50"
-                  >
-                    <td className="py-2  text-xs text-gray-600 text-center border-r border-gray-300">
-                      {idx + 1}
-                    </td>
-                    <td className="pcm-td  font-bold pcm-td-num border-r border-gray-300">
-                      #{order.orderNo}
-                    </td>
-                    <td className="pcm-td pcm-td-name border-r border-gray-300">
-                      {new Date(order.createdAt).toLocaleString()}
-                    </td>
-                    <td className="pcm-td pcm-td-name border-r border-gray-300">
-                      <div className="font-medium text-foreground">
-                        {order.user?.name || "Guest"}
-                      </div>
-                    </td>
-                    <td className="pcm-td pcm-td-name border-r border-gray-300">
-                      <div className="font-medium text-foreground">
-                        {order.user?.email || "-"}
-                      </div>
-                    </td>
-                    <td className="pcm-td pcm-td-name border-r border-gray-300">
-                      <div className="font-medium text-foreground">
-                        {order.user?.mobile || "-"}
-                      </div>
-                    </td>
-                    <td className="pcm-td pcm-td-name text-right pr-4 border-r border-gray-300 font-semibold text-primary">
-                      ₹{order.totalAmount.toFixed(2)}
-                    </td>
-                    <td className="pcm-td border-r border-gray-300 text-left pl-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
-                        {order.deliveryStatus}
-                      </span>
-                    </td>
+            <div className="w-full overflow-x-auto">
+              <table className="table-fixed pcm-table w-full min-w-[800px] rounded-lg bg-transparent">
+                <thead>
+                  <tr>
+                    <th className="pcm-th w-12">S.No</th>
+                    <th className="pcm-th w-32">Order No</th>
+                    <th className="pcm-th w-40">Received Date & Time</th>
+                    <th className="pcm-th w-40">Customer Name</th>
+                    <th className="pcm-th w-48">Email</th>
+                    <th className="pcm-th w-32">Contact No</th>
+                    <th className="pcm-th w-28">Amount Paid</th>
+                    <th className="pcm-th w-36">Delivery Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pagedOrders?.map((order, idx) => (
+                    <tr
+                      key={order.id}
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className="pcm-tr cursor-pointer hover:bg-gray-50/50"
+                    >
+                      <td className="py-2  text-xs text-gray-600 text-center border-r border-gray-300">
+                        {(page - 1) * PAGE_SIZE + idx + 1}
+                      </td>
+                      <td className="pcm-td w-full font-bold text-left  text-foreground border-r border-gray-300">
+                        {order.orderNo}
+                      </td>
+                      <td className="pcm-td pcm-td-name border-r border-gray-300">
+                        {new Date(order.createdAt).toLocaleString()}
+                      </td>
+                      <td className="pcm-td pcm-td-name border-r border-gray-300">
+                        <div className="font-medium text-foreground">
+                          {order.user?.name || "Guest"}
+                        </div>
+                      </td>
+                      <td className="pcm-td pcm-td-name border-r border-gray-300">
+                        <div className="font-medium text-foreground">
+                          {order.user?.email || "-"}
+                        </div>
+                      </td>
+                      <td className="pcm-td pcm-td-name border-r border-gray-300">
+                        <div className="font-medium text-foreground">
+                          {order.user?.mobile || "-"}
+                        </div>
+                      </td>
+                      <td className="pcm-td pcm-td-name text-right pr-4 border-r border-gray-300 font-semibold text-primary">
+                        ₹{order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="pcm-td border-r border-gray-300 text-left pl-2">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getDeliveryStatusColor(order.deliveryStatus)}`}
+                        >
+                          {order.deliveryStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Pagination ── */}
+        {pagedOrders.length > 0 && totalPages > 1 && (
+          <div className="pcm-pagination mt-6">
+            <button
+              className="pcm-page-btn"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                className={`pcm-page-btn ${p === page ? "pcm-page-active" : ""}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              className="pcm-page-btn"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              <ChevronRight size={15} />
+            </button>
           </div>
         )}
       </div>

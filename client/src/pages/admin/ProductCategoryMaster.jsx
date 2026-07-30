@@ -454,12 +454,13 @@ export default function ProductCategoryMaster() {
             )}
           </div>
         ) : (
-          <table className="pcm-table w-[55vw] rounded-lg bg-transparent table-fixed overflow-x-auto">
+          <div className="w-full overflow-x-auto">
+            <table className="pcm-table w-full min-w-[600px] rounded-lg bg-transparent">
             <thead>
               <tr>
                 <th className="pcm-th pcm-th-num w-6">#</th>
                 <th className="pcm-th w-32">Category Name</th>
-                <th className="pcm-th pcm-th-desc w-64">Description</th>
+                <th className="pcm-th w-64">Description</th>
                 <th className="pcm-th pcm-th-actions w-24">Actions</th>
               </tr>
             </thead>
@@ -495,6 +496,7 @@ export default function ProductCategoryMaster() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

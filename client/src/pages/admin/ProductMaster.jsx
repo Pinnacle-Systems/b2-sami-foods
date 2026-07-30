@@ -602,7 +602,7 @@ export default function ProductMaster() {
       {/* ── Add / Edit Form Panel ── */}
       {showForm && (
         <div className="pcm-modal-overlay">
-          <div className="pcm-form-panel pm-3col-panel">
+          <div className="pcm-form-panel pm-3col-panel overflow-y-auto max-h-[90vh] w-[95vw] md:w-auto">
             {/* Header */}
             <div className="pcm-form-panel-header pm-3col-header">
               <span className="pcm-form-panel-title">
@@ -621,7 +621,7 @@ export default function ProductMaster() {
                 {/* Row 1 (5 columns) */}
                 <div className="pm-fields-row">
                   {/* Product Name */}
-                  <div className="pcm-field">
+                  <div className="pcm-field pm-col-span-2-mobile">
                     <label htmlFor="pm-productName" className="pcm-label">
                       Product Name <span className="pcm-required">*</span>
                     </label>
@@ -740,10 +740,7 @@ export default function ProductMaster() {
                       <span className="pcm-err-msg">{errors.discountPrice}</span>
                     )}
                   </div>
-                </div>
 
-                {/* Row 2 (5 columns) */}
-                <div className="pm-fields-row">
                   {/* Selling Price (read-only) */}
                   <div className="pcm-field">
                     <label htmlFor="pm-productPrice" className="pcm-label">
@@ -839,7 +836,7 @@ export default function ProductMaster() {
                   </div>
 
                   {/* Status Toggle aligned in 5th column */}
-                  <div className="pcm-field pm-status-field">
+                  <div className="pcm-field pm-status-field pm-col-span-2-mobile">
                     <span className="pcm-label" style={{ marginBottom: "0.2rem" }}>Status</span>
                     <label className="pm-toggle-label cursor-pointer" style={{ height: "28px" }}>
                       <input
@@ -1056,15 +1053,16 @@ export default function ProductMaster() {
             )}
           </div>
         ) : (
-          <table className="pcm-table w-[80vw] rounded-lg bg-transparent overflow-x-auto table-fixed">
+          <div className="w-full overflow-x-auto">
+            <table className="pcm-table w-full min-w-[1000px] rounded-lg bg-transparent">
             <thead>
               <tr>
                 <th className="pcm-th pcm-th-num w-4">#</th>
                 <th className="pcm-th w-60">Product Name</th>
-                <th className="pcm-th pm-th-hide-sm w-20">Category</th>
+                <th className="pcm-th w-20">Category</th>
 
-                <th className="pcm-th pm-th-hide-sm w-20">Orig. (₹)</th>
-                <th className="pcm-th pm-th-hide-sm w-20">Disc. (₹)</th>
+                <th className="pcm-th w-20">Orig. (₹)</th>
+                <th className="pcm-th w-20">Disc. (₹)</th>
                 <th className="pcm-th pm-th-price w-20">Price (₹)</th>
 
                 <th className="pcm-th w-28" style={{ textAlign: "center" }}>
@@ -1126,18 +1124,19 @@ export default function ProductMaster() {
                     >
                       <Pencil size={14} />
                     </button>
-                    <button
-                      className="pcm-action-btn pcm-delete-btn"
-                      onClick={() => setDeleteId(row.id)}
-                      title="Delete"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <button
+                        className="pcm-action-btn pcm-delete-btn"
+                        onClick={() => setDeleteId(row.id)}
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -28,6 +28,8 @@ const paymentApi = createApi({
         if (filters.email) params.append('email', filters.email);
         if (filters.mobile) params.append('mobile', filters.mobile);
         if (filters.status) params.append('status', filters.status);
+        if (filters.page) params.append('page', filters.page);
+        if (filters.limit) params.append('limit', filters.limit);
         
         return {
           url: `/payment/admin/orders?${params.toString()}`,

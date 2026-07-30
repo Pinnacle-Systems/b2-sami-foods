@@ -408,7 +408,8 @@ export default function UomMaster() {
             </p>
           </div>
         ) : (
-          <table className="pcm-table w-full rounded-lg bg-transparent table-fixed overflow-x-auto">
+          <div className="w-full overflow-x-auto">
+            <table className="pcm-table w-full min-w-[600px] rounded-lg bg-transparent">
             <thead>
               <tr>
                 <th className="pcm-th pcm-th-num w-12">#</th>
@@ -468,6 +469,7 @@ export default function UomMaster() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

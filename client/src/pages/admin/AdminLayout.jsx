@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { LayoutDashboard, Tag, Package, LogOut, Menu, X, ShieldCheck, Sun, Moon, Scale, ShoppingCart } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "../../redux/Dispatch/useAppDispatch"
@@ -14,7 +14,17 @@ const navItems = [
 ]
 
 export default function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(
+    typeof window !== "undefined" ? window.innerWidth > 1024 : true
+  )
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarOpen(window.innerWidth > 1024)
+    }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const user = useAppSelector(selectCurrentUser)

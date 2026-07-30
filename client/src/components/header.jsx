@@ -141,7 +141,7 @@ export function Header() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? "max-h-96" : "max-h-0"}`}>
+      <div className={`md:hidden overflow-y-auto transition-all duration-300 ease-in-out ${isMenuOpen ? "max-h-[80vh]" : "max-h-0 overflow-hidden"}`}>
         <nav className="px-4 py-4 bg-card border-t border-border">
           <div className="flex flex-col gap-2">
             {navLinks.map((link) => (

@@ -138,17 +138,6 @@ export const verifyPaymentService = async ({
       },
     });
 
-    // Clear the user's cart
-    const cart = await prisma.cart.findUnique({
-      where: { userId: updatedOrder.userId },
-    });
-
-    if (cart) {
-      await prisma.cartItem.deleteMany({
-        where: { cartId: cart.id },
-      });
-    }
-
     return true;
   } else {
     throw Object.assign(new Error("Invalid signature"), { status: 400 });
@@ -173,7 +162,7 @@ export const getOrdersService = async (userId) => {
 };
 
 export const getAllOrdersAdminService = async (filters = {}) => {
-  const { orderNo, customerName, email, mobile, status } = filters;
+  const { orderNo, customerName, email, mobile, status, page = 1, limit = 10 } = filters;
 
   const where = {};
 
@@ -198,14 +187,28 @@ export const getAllOrdersAdminService = async (filters = {}) => {
     }
   }
 
-  const orders = await prisma.order.findMany({
-    where,
-    include: {
-      user: { select: { name: true, email: true, mobile: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-  return orders;
+  const skip = (Math.max(1, Number(page)) - 1) * Number(limit);
+  const take = Number(limit);
+
+  const [orders, totalCount] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: {
+        user: { select: { name: true, email: true, mobile: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.order.count({ where })
+  ]);
+
+  return { 
+    orders, 
+    totalCount, 
+    totalPages: Math.ceil(totalCount / take), 
+    currentPage: Number(page) 
+  };
 };
 
 export const getOrderByIdAdminService = async (id) => {
@@ -269,16 +272,6 @@ export const webhookService = async ({ signature, body, secret }) => {
           },
         });
 
-        // Clear cart
-        const cart = await prisma.cart.findUnique({
-          where: { userId: order.userId },
-        });
-
-        if (cart) {
-          await prisma.cartItem.deleteMany({
-            where: { cartId: cart.id },
-          });
-        }
       }
     }
     return "ok";

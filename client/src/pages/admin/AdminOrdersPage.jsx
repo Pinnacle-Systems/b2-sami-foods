@@ -382,12 +382,11 @@ export default function AdminOrdersPage() {
   }, [filters]);
 
   const { data, isLoading, isFetching } =
-    useGetAllOrdersAdminQuery(debouncedFilters);
+    useGetAllOrdersAdminQuery({ ...debouncedFilters, page, limit: PAGE_SIZE });
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
-  const filteredOrders = data?.orders || [];
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
-  const pagedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pagedOrders = data?.orders || [];
+  const totalPages = data?.totalPages || 1;
 
   if (isLoading) {
     return (
@@ -508,12 +507,12 @@ export default function AdminOrdersPage() {
           )}
         </div>
         <span className="pcm-count ml-auto">
-          {filteredOrders.length} record{filteredOrders.length !== 1 ? "s" : ""}
+          {data?.totalCount || 0} record{(data?.totalCount || 0) !== 1 ? "s" : ""}
         </span>
       </div>
 
       <div>
-        {filteredOrders.length === 0 && !isFetching ? (
+        {pagedOrders.length === 0 && !isFetching ? (
           <div className="text-center py-12 bg-card border border-border rounded-xl shadow-sm">
             <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium">No orders found</h3>
@@ -531,7 +530,8 @@ export default function AdminOrdersPage() {
                 </span>
               </div>
             )}
-            <table className="pcm-table w-[80vw] rounded-lg bg-transparent overflow-x-auto table-fixed">
+            <div className="w-full overflow-x-auto">
+              <table className="pcm-table w-full min-w-[800px] rounded-lg bg-transparent">
               <thead>
                 <tr>
                   <th className="pcm-th  w-6">S.No</th>
@@ -587,11 +587,12 @@ export default function AdminOrdersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
         {/* ── Pagination ── */}
-        {filteredOrders.length > 0 && totalPages > 1 && (
+        {pagedOrders.length > 0 && totalPages > 1 && (
           <div className="pcm-pagination mt-6">
             <button
               className="pcm-page-btn"
